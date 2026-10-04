@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calcolatore Accumulo e Rendita</title>
+  <style>
+    :root{
+      --primary:#2563eb;
+      --bg:#0b1220;
+      --card:#111827;
+      --muted:#9ca3af;
+      --text:#e5e7eb;
+      --accent:#22c55e;
+    }
+    *{box-sizing:border-box}
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      margin: 0; padding: 24px;
+      background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
+      color: var(--text);
+    }
+    h1 { margin: 0 0 16px; font-size: 22px; }
+    h2 { margin: 0 0 10px; font-size: 16px; color:#cbd5e1; }
+    .wrap{max-width:1180px;margin:0 auto;}
+    .card{
+      background: var(--card);
+      border: 1px solid #1f2937;
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    .tabelle{display:grid;grid-template-columns:1fr;gap:16px}
+    @media(min-width:1000px){.tabelle{grid-template-columns: 1fr 2fr;}}
+    label{display:block;font-size:13px;color:#cbd5e1;margin-bottom:6px}
+    input{
+      width:100%;padding:10px 12px;border-radius:12px;border:1px solid #334155;
+      background:#0b1220;color:var(--text);outline:none;
+    }
+    input:focus{border-color:#64748b}
+    .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:end}
+    @media(max-width:640px){.row3{grid-template-columns:1fr 1fr}}
+    .fase{border:1px solid #1f2937;border-radius:14px;padding:12px;margin-bottom:12px}
+    .btn{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 14px;border-radius:12px;background:var(--primary);color:white;
+      border:none;cursor:pointer;font-weight:600;margin-top:4px
+    }
+    .btn:focus-visible{outline:2px solid #93c5fd;outline-offset:2px}
+    .muted{color:var(--muted);font-size:12px}
+    canvas{width:100%!important;height:520px!important;background:#0b1220;border-radius:14px;border:1px solid #334155;margin-top:12px}
+    table{width:100%;border-collapse:collapse;margin-top:8px;border-radius:12px;overflow:hidden;font-size:13px}
+    th,td{padding:7px 8px;text-align:right;border-bottom:1px solid #1f2937;font-variant-numeric:tabular-nums;white-space:nowrap}
+    th{background:#0b1220;color:#cbd5e1;position:sticky;top:0}
+    td:first-child, th:first-child{text-align:center}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#0b1220;border:1px solid #334155;font-size:12px}
+    .ok{color:var(--accent)}
+    .warn{color:#f59e0b}
+    .kpi{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+    @media(min-width:640px){.kpi{grid-template-columns:repeat(4,1fr)}}
+    .kpi div{background:#0b1220;border:1px solid #334155;border-radius:12px;padding:10px}
+    .kpi span{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+    .kpi b{font-size:16px}
+    .tabWrap{max-height:520px;overflow:auto}
+    @media(max-width:640px){canvas{height:340px!important}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Calcolatore Accumulo e Rendita <span class="muted">| con tassazione sulle sole plusvalenze</span></h1>
+    <div class="grid">
+      <div class="card">
+
+        <div class="fase">
+          <h2>Fase 1: accumulo</h2>
+          <div class="row3">
+            <div>
+              <label for="capIniz">Capitale iniziale (€)</label>
+              <input type="number" id="capIniz" value="0" min="0" step="100">
+            </div>
+            <div>
+              <label for="versMens">Versamento mensile (€)</label>
+              <input type="number" id="versMens" value="1000" min="0" step="50">
+            </div>
+            <div>
+              <label for="anniAcc">Durata accumulo (anni)</label>
+              <input type="number" id="anniAcc" value="30" min="0" max="80">
+            </div>
+            <div>
+              <label for="rendAcc">Rendimento medio annuo (%)</label>
+              <input type="number" id="rendAcc" value="5" step="0.1">
+            </div>
+          </div>
+        </div>
+
+        <div class="fase">
+          <h2>Fase 2: rendita</h2>
+          <div class="row3">
+            <div>
+              <label for="rendDec">Rendimento medio annuo (%)</label>
+              <input type="number" id="rendDec" value="5" step="0.1">
+            </div>
+            <div>
+              <label for="inflazione">Inflazione attesa annua (%)</label>
+              <input type="number" id="inflazione" value="2" step="0.1">
+            </div>
+            <div>
+              <label for="prelievo">Tasso di prelievo annuo (% sul capitale iniziale, indicizzato all'inflazione)</label>
+              <input type="number" id="prelievo" value="4" step="0.1">
+            </div>
+            <div>
+              <label for="tasse">Aliquota sulle plusvalenze (%)</label>
+              <input type="number" id="tasse" value="26" step="0.1">
+            </div>
+            <div>
+              <label for="anniMax">Orizzonte massimo (anni)</label>
+              <input type="number" id="anniMax" value="30" min="1" max="120">
+            </div>
+          </div>
+        </div>
+
+        <button class="btn" id="btnCalcola">Calcola</button>
+        <div class="muted" style="margin-top:8px">
+          Accumulo: versamenti a fine mese, interesse composto mensile equivalente al rendimento annuo.
+          Rendita: prelievo a inizio anno, calcolato come % del capitale a inizio rendita e poi <em>adeguato all'inflazione</em> ogni anno (stile “regola del 4%”).
+          Le tasse si applicano solo alla quota di plusvalenza contenuta in ogni prelievo, non alla quota di capitale versato.
+        </div>
+
+        <div id="summary" style="margin-top:12px"></div>
+        <div class="kpi" id="kpi"></div>
+        <canvas id="chart"></canvas>
+        <div class="muted" style="margin-top:8px">
+          Simulazione a scopo illustrativo con rendimenti costanti ipotetici, non garantiti. Valori nominali. Non costituisce consulenza fiscale o raccomandazione di investimento.
+        </div>
+      </div>
+
+      <div class="card tabelle">
+        <div>
+        <h2>Fase 1: accumulo</h2>
+        <div class="tabWrap">
+          <table id="tableAcc">
+            <thead>
+              <tr>
+                <th>Anno</th>
+                <th>Versato</th>
+                <th>Valore</th>
+                <th>Plusvalenza</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        </div>
+        <div>
+        <h2>Fase 2: rendita</h2>
+        <div class="tabWrap">
+          <table id="tableDec">
+            <thead>
+              <tr>
+                <th>Anno</th>
+                <th>Capitale Inizio</th>
+                <th>Prelievo Lordo</th>
+                <th>% Plusv.</th>
+                <th>Tasse</th>
+                <th>Netto Annuo</th>
+                <th>Netto Mensile</th>
+                <th>Capitale Fine</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    const fmt = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+    const pct = new Intl.NumberFormat('it-IT', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+    let chart;
+
+    // Fase 1: interesse composto mensile, versamenti a fine mese
+    function simulaAccumulo({capIniz, versMens, anni, rendimento}){
+      const rMese = Math.pow(1 + rendimento, 1/12) - 1;
+      let valore = capIniz;
+      let versato = capIniz;
+      const rows = [];
+      for (let anno = 1; anno <= anni; anno++){
+        for (let m = 0; m < 12; m++){
+          valore = valore * (1 + rMese) + versMens;
+          versato += versMens;
+        }
+        rows.push({ anno, versato, valore, plusvalenza: valore - versato });
+      }
+      return { rows, valoreFinale: valore, versatoFinale: versato };
+    }
+
+    // Fase 2: prelievi con tassazione sulla sola quota di plusvalenza
+    function simulaRendita({capitale0, costoFiscale0, inflazione, tassoPrelievo, tasse, rendimento, anniMax}){
+      let anno = 0;
+      let capitale = capitale0;
+      let costo = Math.min(costoFiscale0, capitale0);
+      let prelievoPrevisto = capitale0 * tassoPrelievo;
+      const rows = [];
+      while (capitale > 0.005 && anno < anniMax){
+        anno++;
+        const capStart = capitale;
+        const prelievoLordo = Math.min(prelievoPrevisto, capitale);
+        // quota di plusvalenza contenuta nel portafoglio (e quindi in ogni euro venduto)
+        const quotaPlus = Math.max(0, (capitale - costo) / capitale);
+        const imposta = prelievoLordo * quotaPlus * tasse;
+        const prelievoNetto = prelievoLordo - imposta;
+        // il costo fiscale si riduce in proporzione a quanto si vende
+        costo = costo * (1 - prelievoLordo / capitale);
+        capitale = (capitale - prelievoLordo) * (1 + rendimento);
+        rows.push({ anno, capStart, prelievoLordo, quotaPlus, imposta, prelievoNetto, capEnd: capitale });
+        prelievoPrevisto = prelievoPrevisto * (1 + inflazione);
+      }
+      return rows;
+    }
+
+    function num(id, def){
+      const v = parseFloat(document.getElementById(id).value);
+      return isNaN(v) ? def : v;
+    }
+
+    function render(){
+      const capIniz = num('capIniz', 0);
+      const versMens = num('versMens', 0);
+      const anniAcc = Math.max(0, Math.round(num('anniAcc', 0)));
+      const rendAcc = num('rendAcc', 0) / 100;
+      const rendDec = num('rendDec', 0) / 100;
+      const inflazione = num('inflazione', 0) / 100;
+      const tassoPrelievo = num('prelievo', 0) / 100;
+      const tasse = num('tasse', 0) / 100;
+      const anniMax = Math.max(1, Math.round(num('anniMax', 30)));
+
+      if (capIniz < 0 || versMens < 0){ alert('Capitale iniziale e versamento mensile non possono essere negativi.'); return; }
+
+      const acc = simulaAccumulo({ capIniz, versMens, anni: anniAcc, rendimento: rendAcc });
+      const capitale0 = acc.valoreFinale;
+      const costo0 = acc.versatoFinale;
+
+      if (capitale0 <= 0){ alert('Con questi dati il capitale accumulato è zero: inserisci un capitale iniziale o un versamento mensile.'); return; }
+
+      const dec = simulaRendita({ capitale0, costoFiscale0: costo0, inflazione, tassoPrelievo, tasse, rendimento: rendDec, anniMax });
+
+      // Riepilogo
+      const ultimo = dec[dec.length - 1];
+      const esaurito = ultimo && ultimo.capEnd <= 0.005;
+      const primo = dec[0];
+      const aliqEff = primo && primo.prelievoLordo > 0 ? primo.imposta / primo.prelievoLordo : 0;
+      document.getElementById('summary').innerHTML = `
+        <span class="pill ${esaurito ? 'warn' : 'ok'}">${esaurito ? 'Si esaurisce' : 'Non si esaurisce'}</span>
+        ${esaurito ? ' dopo ' + dec.length + ' anni di rendita.' : ' entro ' + dec.length + ' anni di rendita.'}
+        &nbsp; • &nbsp; Rendita netta iniziale: <b>${fmt.format(primo ? primo.prelievoNetto / 12 : 0)}/mese</b>
+      `;
+
+      const valoreOggi = capitale0 / Math.pow(1 + inflazione, anniAcc);
+      document.getElementById('kpi').innerHTML = `
+        <div><span>Capitale a fine accumulo</span><b>${fmt.format(capitale0)}</b></div>
+        <div><span>Di cui versato</span><b>${fmt.format(costo0)}</b></div>
+        <div><span>Di cui plusvalenza</span><b>${fmt.format(capitale0 - costo0)}</b></div>
+        <div><span>In euro di oggi (inflazione)</span><b>${fmt.format(valoreOggi)}</b></div>
+        <div><span>Prelievo lordo anno 1</span><b>${fmt.format(primo ? primo.prelievoLordo : 0)}</b></div>
+        <div><span>Tasse anno 1</span><b>${fmt.format(primo ? primo.imposta : 0)}</b></div>
+        <div><span>Aliquota effettiva anno 1</span><b>${pct.format(aliqEff)}</b></div>
+        <div><span>Capitale residuo finale</span><b>${fmt.format(ultimo ? ultimo.capEnd : 0)}</b></div>
+      `;
+
+      // Tabella accumulo
+      const tbA = document.querySelector('#tableAcc tbody');
+      tbA.innerHTML = '';
+      acc.rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.anno}</td>
+          <td>${fmt.format(r.versato)}</td>
+          <td>${fmt.format(r.valore)}</td>
+          <td>${fmt.format(r.plusvalenza)}</td>
+        `;
+        tbA.appendChild(tr);
+      });
+
+      // Tabella rendita
+      const tbD = document.querySelector('#tableDec tbody');
+      tbD.innerHTML = '';
+      dec.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.anno}</td>
+          <td>${fmt.format(r.capStart)}</td>
+          <td>${fmt.format(r.prelievoLordo)}</td>
+          <td>${pct.format(r.quotaPlus)}</td>
+          <td>${fmt.format(r.imposta)}</td>
+          <td>${fmt.format(r.prelievoNetto)}</td>
+          <td>${fmt.format(r.prelievoNetto / 12)}</td>
+          <td>${fmt.format(r.capEnd)}</td>
+        `;
+        tbD.appendChild(tr);
+      });
+
+      // Grafico: capitale e versato su tutta la vita, rendita netta solo in fase 2
+      const labels = [
+        ...acc.rows.map(r => 'Acc. ' + r.anno),
+        ...dec.map(r => 'Ren. ' + r.anno)
+      ];
+      const capitaleSerie = [...acc.rows.map(r => r.valore), ...dec.map(r => r.capEnd)];
+      const versatoSerie = [...acc.rows.map(r => r.versato), ...dec.map(() => null)];
+      const nettoSerie = [...acc.rows.map(() => null), ...dec.map(r => r.prelievoNetto)];
+
+      const ctx = document.getElementById('chart').getContext('2d');
+      if (chart){ chart.destroy(); }
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Capitale (€)', data: capitaleSerie, tension: 0.2, borderWidth: 2, pointRadius: 0 },
+            { label: 'Versato (€)', data: versatoSerie, tension: 0.2, borderWidth: 2, pointRadius: 0, borderDash: [2,3] },
+            { label: 'Rendita netta annua (€)', data: nettoSerie, tension: 0.2, borderDash: [6,4], borderWidth: 2, pointRadius: 0, yAxisID: 'y1' }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            y: { beginAtZero: true, ticks: { callback: v => fmt.format(v) } },
+            y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, ticks: { callback: v => fmt.format(v) } },
+            x: { ticks: { maxRotation: 60, autoSkip: true } }
+          },
+          plugins: {
+            legend: { labels: { color: '#e5e7eb' } },
+            tooltip: {
+              callbacks: {
+                label: (c) => c.parsed.y == null ? null : c.dataset.label + ': ' + fmt.format(c.parsed.y)
+              }
+            }
+          }
+        }
+      });
+    }
+
+    document.getElementById('btnCalcola').addEventListener('click', render);
+    render();
+  </script>
+</body>
+</html>
