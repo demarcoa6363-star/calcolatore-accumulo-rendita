@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Calcolatore Accumulo e Rendita</title>
-  <!-- layout verticale v2 -->
+  <!-- layout verticale v3 -->
   <style>
     :root{
       --primary:#2563eb;
@@ -49,7 +49,7 @@
     }
     .btn:focus-visible{outline:2px solid #93c5fd;outline-offset:2px}
     .muted{color:var(--muted);font-size:12px}
-    canvas{width:100%!important;height:520px!important;background:#0b1220;border-radius:14px;border:1px solid #334155;margin-top:12px}
+    .chartBox{position:relative;height:520px;width:100%;margin-top:12px;background:#0b1220;border-radius:14px;border:1px solid #334155;padding:10px}
     table{width:100%;border-collapse:collapse;margin-top:8px;border-radius:12px;overflow:hidden;font-size:13px}
     th,td{padding:7px 8px;text-align:right;border-bottom:1px solid #1f2937;font-variant-numeric:tabular-nums;white-space:nowrap}
     th{background:#0b1220;color:#cbd5e1;position:sticky;top:0}
@@ -63,7 +63,7 @@
     .kpi span{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
     .kpi b{font-size:16px}
     .tabWrap{max-height:520px;overflow:auto}
-    @media(max-width:640px){canvas{height:340px!important}}
+    @media(max-width:640px){.chartBox{height:380px}}
   </style>
 </head>
 <body>
@@ -129,7 +129,7 @@
 
         <div id="summary" style="margin-top:12px"></div>
         <div class="kpi" id="kpi"></div>
-        <canvas id="chart"></canvas>
+        <div class="chartBox"><canvas id="chart"></canvas></div>
         <div class="muted" style="margin-top:8px">
           Simulazione a scopo illustrativo con rendimenti costanti ipotetici, non garantiti. Valori nominali. Non costituisce consulenza fiscale o raccomandazione di investimento.
         </div>
@@ -183,6 +183,14 @@
     const pct = new Intl.NumberFormat('it-IT', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
     let chart;
+
+    // Etichette brevi per gli assi: 815.000 € -> 815k €, 1.200.000 € -> 1,2 Mln €
+    function compatto(v){
+      const a = Math.abs(v);
+      if (a >= 1e6) return (v / 1e6).toLocaleString('it-IT', { maximumFractionDigits: 1 }) + ' Mln €';
+      if (a >= 1e3) return Math.round(v / 1e3).toLocaleString('it-IT') + 'k €';
+      return Math.round(v) + ' €';
+    }
 
     // Fase 1: interesse composto mensile, versamenti a fine mese
     function simulaAccumulo({capIniz, versMens, anni, rendimento}){
@@ -331,12 +339,32 @@
           maintainAspectRatio: false,
           interaction: { mode: 'index', intersect: false },
           scales: {
-            y: { beginAtZero: true, ticks: { callback: v => fmt.format(v) } },
-            y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, ticks: { callback: v => fmt.format(v) } },
-            x: { ticks: { maxRotation: 60, autoSkip: true } }
+            y: {
+              beginAtZero: true,
+              grid: { color: '#1f2937' },
+              title: { display: true, text: 'Capitale', color: '#cbd5e1', font: { size: 13 } },
+              ticks: { color: '#cbd5e1', font: { size: 13 }, maxTicksLimit: 8, callback: v => compatto(v) }
+            },
+            y1: {
+              position: 'right',
+              beginAtZero: true,
+              grid: { drawOnChartArea: false },
+              title: { display: true, text: 'Rendita netta annua', color: '#cbd5e1', font: { size: 13 } },
+              ticks: { color: '#cbd5e1', font: { size: 13 }, maxTicksLimit: 8, callback: v => compatto(v) }
+            },
+            x: {
+              grid: { color: '#1f2937' },
+              ticks: {
+                color: '#cbd5e1',
+                font: { size: 12 },
+                maxRotation: 0,
+                autoSkip: true,
+                maxTicksLimit: window.innerWidth < 640 ? 6 : 14
+              }
+            }
           },
           plugins: {
-            legend: { labels: { color: '#e5e7eb' } },
+            legend: { labels: { color: '#e5e7eb', font: { size: 13 }, boxWidth: 28, padding: 16 } },
             tooltip: {
               callbacks: {
                 label: (c) => c.parsed.y == null ? null : c.dataset.label + ': ' + fmt.format(c.parsed.y)
