@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Calcolatore Accumulo e Rendita</title>
+  <!-- layout verticale v2 -->
   <style>
     :root{
       --primary:#2563eb;
@@ -30,9 +31,8 @@
       padding: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,.25);
     }
-    .grid{display:grid;grid-template-columns:1fr;gap:12px}
-    .tabelle{display:grid;grid-template-columns:1fr;gap:16px}
-    @media(min-width:1000px){.tabelle{grid-template-columns: 1fr 2fr;}}
+    .grid{display:flex;flex-direction:column;gap:16px}
+    .tabelle{display:flex;flex-direction:column;gap:20px}
     label{display:block;font-size:13px;color:#cbd5e1;margin-bottom:6px}
     input{
       width:100%;padding:10px 12px;border-radius:12px;border:1px solid #334155;
